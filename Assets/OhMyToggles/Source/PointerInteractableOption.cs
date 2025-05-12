@@ -54,6 +54,13 @@ namespace OhMyToggles
 			updateVisualsToPointerInteraction(State);
 		}
 
+		public void OnPointerUp(PointerEventData eventData)
+		{
+			PlayerIsPressingIt = false;
+			State = IsOn ? PointerRelativeState.IdleWhenSelected : PointerRelativeState.IdleWhenNotSelected;
+			updateVisualsToPointerInteraction(State);
+		}
+
 		public void OnPointerEnter(PointerEventData eventData)
 		{
 			State = IsOn ? PointerRelativeState.HoveredWhenSelected : PointerRelativeState.HoveredWhenNotSelected;
