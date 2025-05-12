@@ -31,33 +31,30 @@ namespace OhMyToggles
 		{
 			if (newIsOnValue == IsOn) return;
 
-			if (Group != null && !Group.OptionCanBeSetToSelectedValue(this, newIsOnValue)) return;
+			if (Group != null && !Group.OptionCanBeSetToSelectedValue(this, newIsOnValue))
+			{
+				// forcing a state change because otherwise wouldn't return to the idle states when selected by
+				// user but not switching
+				State = IsOn ? PointerRelativeState.IdleWhenSelected : PointerRelativeState.IdleWhenNotSelected;
+				return;
+			}
 
 			IsOn = newIsOnValue;
 
-			// first we turn off every other option that needs to be off (even if they raise events)
-			Group?.AssertConsistency(this, newIsOnValue);
-
 			State = IsOn ? PointerRelativeState.IdleWhenSelected : PointerRelativeState.IdleWhenNotSelected;
-			
+
 			// then we change our visual and raise our event if needed
 			ForceUpdateVisualsToPointerRelativeState(State);
-
 			handleEventTrigger();
-		}
 
+			// first we turn off every other option that needs to be off (even if they raise events)
+			Group?.AssertConsistency(this, newIsOnValue);
+		}
 
 		public void OnPointerDown(PointerEventData eventData)
 		{
 			PlayerIsPressingIt = true;
 			State = IsOn ? PointerRelativeState.PressedWhenSelected : PointerRelativeState.PressedWhenNotSelected;
-			updateVisualsToPointerInteraction(State);
-		}
-
-		public void OnPointerUp(PointerEventData eventData)
-		{
-			PlayerIsPressingIt = false;
-			State = IsOn ? PointerRelativeState.IdleWhenSelected : PointerRelativeState.IdleWhenNotSelected;
 			updateVisualsToPointerInteraction(State);
 		}
 
@@ -75,8 +72,8 @@ namespace OhMyToggles
 
 		public void OnPointerClick(PointerEventData eventData)
 		{
-			PlayerIsPressingIt = false;
 			Toggle();
+			PlayerIsPressingIt = false;
 		}
 
 
@@ -88,15 +85,14 @@ namespace OhMyToggles
 
 		protected override void handleEventTrigger()
 		{
-			bool selectedByUser = State == PointerRelativeState.PressedWhenNotSelected || State == PointerRelativeState.PressedWhenSelected;
-			bool shouldNeverRaiseEvent = EventRaiseCondition == OptionEventRaiseCondition.NEVER || (PointerEventConfig == UserPointerEventRaiseCondition.NEVER && selectedByUser);
+			bool shouldNeverRaiseEvent = EventRaiseCondition == OptionEventRaiseCondition.NEVER || (PointerEventConfig == UserPointerEventRaiseCondition.NEVER && PlayerIsPressingIt);
 
 			if (shouldNeverRaiseEvent) return;
 
 			if (PointerEventConfig != UserPointerEventRaiseCondition.ALWAYS)
 			{
-				if (PointerEventConfig == UserPointerEventRaiseCondition.ONLY_WHEN_SELECTED_BY_USER && !selectedByUser ||
-					PointerEventConfig == UserPointerEventRaiseCondition.ONLY_WHEN_SELECTED_ON_CODE && selectedByUser) return;
+				if (PointerEventConfig == UserPointerEventRaiseCondition.ONLY_WHEN_SELECTED_BY_USER && !PlayerIsPressingIt ||
+					PointerEventConfig == UserPointerEventRaiseCondition.ONLY_WHEN_SELECTED_ON_CODE && PlayerIsPressingIt) return;
 			}
 
 			if (EventRaiseCondition != OptionEventRaiseCondition.ALWAYS)

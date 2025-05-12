@@ -7,7 +7,6 @@ namespace OhMyToggles.Interfaces
 		IPointerEnterHandler,
 		IPointerExitHandler,
 		IPointerDownHandler,
-		IPointerUpHandler,
 		IPointerClickHandler
 	{
 		bool PlayerIsPressingIt { get; }
