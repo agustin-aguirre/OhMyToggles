@@ -27,6 +27,8 @@ namespace OhMyToggles
 
 			Group?.AssertConsistency(this, newIsOnValue);
 
+			beforeEventTriggers(newIsOnValue);
+
 			handleEventTrigger();
 		}
 
@@ -43,6 +45,8 @@ namespace OhMyToggles
 		}
 
 
-		protected void forceBroadcastEvent(bool newSelectedValue) => OnSwitched.Invoke(this, newSelectedValue);
+		protected virtual void forceBroadcastEvent(bool newSelectedValue) => OnSwitched.Invoke(this, newSelectedValue);
+
+		protected virtual void beforeEventTriggers(bool newIsOnValue) { }
 	}
 }

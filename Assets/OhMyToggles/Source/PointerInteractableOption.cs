@@ -43,12 +43,14 @@ namespace OhMyToggles
 
 			State = IsOn ? PointerRelativeState.IdleWhenSelected : PointerRelativeState.IdleWhenNotSelected;
 
-			// then we change our visual and raise our event if needed
-			ForceUpdateVisualsToPointerRelativeState(State);
-			handleEventTrigger();
-
 			// first we turn off every other option that needs to be off (even if they raise events)
 			Group?.AssertConsistency(this, newIsOnValue);
+			
+			// then we change our visual and raise our event if needed
+			ForceUpdateVisualsToPointerRelativeState(State);
+			beforeEventTriggers(newIsOnValue);
+			handleEventTrigger();
+
 		}
 
 		public void OnPointerDown(PointerEventData eventData)
