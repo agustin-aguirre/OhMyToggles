@@ -13,9 +13,10 @@ namespace OhMyToggles
 		public event System.Action<IOption, bool> OnSwitched = delegate { };
 
 
-		protected virtual void Awake()
+		protected virtual void Start()
 		{
-			if (Group = null) Group.RegisterOption(this);
+			if (Group is not null) 
+				Group.RegisterOption(this);
 		}
 
 		public void ForceIsOnValue(bool newIsOnValue) => IsOn = newIsOnValue;

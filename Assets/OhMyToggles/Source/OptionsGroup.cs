@@ -26,7 +26,7 @@ namespace OhMyToggles
 		[Header("Config:")]
 		public bool AllowMultiOptionSelection = false;
 		public bool AllowAllOptionsOff = false;
-		public AutoChildRegisterMoment AutoRegisterMoment = AutoChildRegisterMoment.ON_AWAKE;
+		public AutoChildRegisterMoment AutoRegisterMoment = AutoChildRegisterMoment.ON_START;
 		public AutoChildRegisterMethod AutoRegisterMethod = AutoChildRegisterMethod.ONLY_REGISTER_NON_ANIDATED_OPTIONS;
 		
 		public IEnumerable<IOption> SelectedOptions => Options?.Where(o => o.IsOn);
@@ -99,21 +99,20 @@ namespace OhMyToggles
 
 		public void RegisterChildOptions()
 		{
-			IEnumerable<IOption> options;
-			switch (AutoRegisterMethod)
+			IEnumerable<IOption> options = AutoRegisterMethod switch
 			{
-				case AutoChildRegisterMethod.ONLY_REGISTER_OPTIONS_THAT_ARE_DIRECT_CHILDREN:
+				AutoChildRegisterMethod.ONLY_REGISTER_OPTIONS_THAT_ARE_DIRECT_CHILDREN =>
 					options = directChildren(transform)
 						.Where(t => t.TryGetComponent(out IOption opt))
-						.Select(t => t.GetComponent<IOption>());
-					break;
-				case AutoChildRegisterMethod.ONLY_REGISTER_NON_ANIDATED_OPTIONS:
-					options = getNonAnidatedOptions();
-					break;
-				default:
-					options = transform.GetComponentsInChildren<IOption>();
-					break;
-			}
+						.Select(t => t.GetComponent<IOption>()),
+
+				AutoChildRegisterMethod.ONLY_REGISTER_NON_ANIDATED_OPTIONS =>
+					options = getNonAnidatedOptions(),
+
+				_ =>
+					options = transform.GetComponentsInChildren<IOption>()
+			};
+
 			RegisterOptions(options);
 		}
 

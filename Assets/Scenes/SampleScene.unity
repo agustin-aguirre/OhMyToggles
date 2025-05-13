@@ -1712,7 +1712,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AllowMultiOptionSelection: 0
   AllowAllOptionsOff: 0
-  RegisterAllOptionChildrenOnAwake: 1
+  AutoRegisterMoment: 1
+  AutoRegisterMethod: 2
 --- !u!1001 &2023529078
 PrefabInstance:
   m_ObjectHideFlags: 0
