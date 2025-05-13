@@ -6,6 +6,19 @@ using UnityEngine;
 
 namespace OhMyToggles
 {
+	public enum AutoChildRegisterMoment
+	{
+		DONT_AUTO_REGISTER = 0,
+		ON_AWAKE = 1,
+		ON_START = 2
+	}
+	public enum AutoChildRegisterMethod
+	{
+		REGISTER_ALL_CHILDREN = 0,
+		ONLY_REGISTER_OPTIONS_THAT_ARE_DIRECT_CHILDREN = 1,
+		ONLY_REGISTER_NON_ANIDATED_OPTIONS = 2
+	}
+
 	public class OptionsGroup : MonoBehaviour
 	{
 		public IEnumerable<IOption> Options { get; private set; } = new List<IOption>();
@@ -13,19 +26,19 @@ namespace OhMyToggles
 		[Header("Config:")]
 		public bool AllowMultiOptionSelection = false;
 		public bool AllowAllOptionsOff = false;
+		public AutoChildRegisterMoment AutoRegisterMoment = AutoChildRegisterMoment.ON_AWAKE;
+		public AutoChildRegisterMethod AutoRegisterMethod = AutoChildRegisterMethod.ONLY_REGISTER_NON_ANIDATED_OPTIONS;
 		
-		public bool RegisterAllOptionChildrenOnAwake = true;
-
 		public IEnumerable<IOption> SelectedOptions => Options?.Where(o => o.IsOn);
 
 
-		private void Awake()
-		{
-			if (RegisterAllOptionChildrenOnAwake)
-				RegisterAllChildOptions();
-		}
+		private void Awake() => tryAutoRegisterChildren(invokedOnAwake: true);
 
-		private void Start() => AssertConsistency();
+		private void Start()
+		{
+			tryAutoRegisterChildren(invokedOnStart: true);
+			AssertConsistency();
+		}
 
 
 		public void AssertConsistency()
@@ -84,12 +97,29 @@ namespace OhMyToggles
 			=> Options.Contains(option) && option.Group == this;
 
 
-		public void RegisterAllChildOptions()
-			=> RegisterOptions(transform.GetComponentsInChildren<IOption>());
+		public void RegisterChildOptions()
+		{
+			IEnumerable<IOption> options;
+			switch (AutoRegisterMethod)
+			{
+				case AutoChildRegisterMethod.ONLY_REGISTER_OPTIONS_THAT_ARE_DIRECT_CHILDREN:
+					options = directChildren(transform)
+						.Where(t => t.TryGetComponent(out IOption opt))
+						.Select(t => t.GetComponent<IOption>());
+					break;
+				case AutoChildRegisterMethod.ONLY_REGISTER_NON_ANIDATED_OPTIONS:
+					options = getNonAnidatedOptions();
+					break;
+				default:
+					options = transform.GetComponentsInChildren<IOption>();
+					break;
+			}
+			RegisterOptions(options);
+		}
 
 
-		public void RegisterAllChildOptions<TToggle>() where TToggle : MonoBehaviour, IOption
-			=> RegisterOptions(transform.GetComponentsInChildren<TToggle>());
+		public void RegisterChildOptions<TOption>() where TOption : MonoBehaviour, IOption
+			=> RegisterOptions(transform.GetComponentsInChildren<TOption>());
 
 
 		public void RegisterOption(IOption option)
@@ -116,6 +146,49 @@ namespace OhMyToggles
 			options.RemoveAll(o => o == null);
 			options.ForEach(o => o.Group = null);
 			options.ToList().Clear();
+		}
+
+
+
+		void tryAutoRegisterChildren(bool invokedOnAwake = false, bool invokedOnStart = false)
+		{
+			bool shouldAutoRegister = AutoRegisterMoment != AutoChildRegisterMoment.DONT_AUTO_REGISTER;
+			if (!shouldAutoRegister) return;
+
+			bool registerNow = (invokedOnAwake && AutoRegisterMoment == AutoChildRegisterMoment.ON_AWAKE) ||
+							   (invokedOnStart && AutoRegisterMoment == AutoChildRegisterMoment.ON_START);
+
+			if (registerNow)
+				RegisterChildOptions();
+		}
+
+
+		IEnumerable<Transform> directChildren(Transform t)
+			=> Enumerable.Range(0, transform.childCount).Select(i => transform.GetChild(i));
+
+
+		// BFS looking for IOptions
+		IEnumerable<IOption> getNonAnidatedOptions()
+		{
+			List<IOption> foundOptions = new List<IOption>();
+			var stack = new Stack<Transform>(directChildren(transform));
+			
+			while (stack.Count > 0)
+			{
+				var child = stack.Pop();
+
+				if (child.TryGetComponent(out IOption option))
+				{
+					foundOptions.Add(option);
+				}
+				else if(!child.TryGetComponent(out OptionsGroup group))
+				{
+					foreach (var t in directChildren(child))
+						stack.Push(t);
+				}
+			}
+
+			return foundOptions;
 		}
 	}
 }
