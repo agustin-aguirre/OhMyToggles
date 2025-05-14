@@ -162,10 +162,6 @@ namespace OhMyToggles
 		}
 
 
-		IEnumerable<Transform> directChildren(Transform t)
-			=> Enumerable.Range(0, transform.childCount).Select(i => transform.GetChild(i));
-
-
 		// BFS looking for IOptions
 		IEnumerable<IOption> getNonAnidatedOptions()
 		{
@@ -189,5 +185,9 @@ namespace OhMyToggles
 
 			return foundOptions;
 		}
+
+
+		List<Transform> directChildren(Transform targetTransform)
+			=> Enumerable.Range(0, targetTransform.childCount).Select(i => targetTransform.GetChild(i)).ToList();
 	}
 }
