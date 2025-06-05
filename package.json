@@ -1,6 +1,6 @@
 {
   "name": "com.agustin-aguirre.ohmytoggles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Oh My Toggles!",
   "description": "A better, more robust and flexible set of toggles that are not UI dependant.",
   "unity": "2019.1",
